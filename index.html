@@ -33,33 +33,25 @@ var scene = viewer.scene;
 
 function createModel(url, height) {
     height = Cesium.defaultValue(height, 0.0);
+    
+    viewer.entities.removeAll();
 
-    var modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706, height));
+    var position = Cesium.Cartesian3.fromDegrees(9.986944, 53.561667, height);
+    var heading = 0;
+    var pitch = 0;
+    var roll = 0;
+    var orientation = Cesium.Transforms.headingPitchRollQuaternion(position, heading, pitch, roll);
 
-    scene.primitives.removeAll(); // Remove previous model
-    var model = scene.primitives.add(Cesium.Model.fromGltf({
-        url : url,
-        modelMatrix : modelMatrix,
-        minimumPixelSize : 128
-    }));
-
-    model.readyToRender.addEventListener(function(model) {
-        // Play and loop all animations at half-spead
-        model.activeAnimations.addAll({
-            speedup : 0.5,
-            loop : Cesium.ModelAnimationLoop.REPEAT
-        });
-
-        // Zoom to model
-        var center = Cesium.Matrix4.multiplyByPoint(model.modelMatrix, model.boundingSphere.center, new Cesium.Cartesian3());
-        var transform = Cesium.Transforms.eastNorthUpToFixedFrame(center);
-        var camera = scene.camera;
-        camera.transform = transform;
-        var controller = scene.screenSpaceCameraController;
-        var r = 2.0 * Math.max(model.boundingSphere.radius, camera.frustum.near);
-        controller.minimumZoomDistance = r * 0.5;
-        camera.lookAt(new Cesium.Cartesian3(r, r, r), Cesium.Cartesian3.ZERO, Cesium.Cartesian3.UNIT_Z);
+    var entity = viewer.entities.add({
+        name : url,
+        position : position,
+        orientation : orientation,
+        model : {
+            uri : url,
+            minimumPixelSize : 128
+        }
     });
+    viewer.trackedEntity = entity;
 }
 
 var handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
